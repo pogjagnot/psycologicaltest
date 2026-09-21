@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Психологический тренинг — Эффективный руководитель</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            dark: '#0a0d1d',
+                            card: 'rgba(255, 255, 255, 0.07)',
+                            accent: '#6366f1',
+                            accentGlow: '#818cf8',
+                            teal: '#14b8a6',
+                            purple: '#a855f7'
+                        }
+                    },
+                    animation: {
+                        'pulse-glow': 'pulseGlow 3s infinite ease-in-out',
+                        'float': 'float 6s infinite ease-in-out',
+                    },
+                    keyframes: {
+                        pulseGlow: {
+                            '0%, 100%': { filter: 'drop-shadow(0 0 15px rgba(99, 102, 241, 0.4))' },
+                            '50%': { filter: 'drop-shadow(0 0 30px rgba(168, 85, 247, 0.7))' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-8px)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: radial-gradient(circle at 50% 20%, #1e1b4b 0%, #0f172a 60%, #090d16 100%);
+            color: #f8fafc;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            touch-action: none;
+        }
+
+        .glass-card:hover {
+            border-color: rgba(129, 140, 248, 0.5);
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .glass-card.dragging {
+            opacity: 0.85;
+            scale: 1.08;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5), 0 0 25px rgba(129, 140, 248, 0.6);
+            z-index: 1000 !important;
+        }
+
+        .drop-zone-active {
+            filter: drop-shadow(0 0 25px rgba(99, 102, 241, 0.8)) !important;
+            transform: scale(1.02);
+        }
+
+        .timer-circle {
+            transition: stroke-dashoffset 1s linear;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+    </style>
+</head>
+<body class="font-sans antialiased flex flex-col justify-between min-h-screen relative overflow-x-hidden">
+
+    <script>
+        class SoundFX {
+            constructor() {
+                this.ctx = null;
+            }
+            init() {
+                if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            playPop() {
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.08);
+            }
+            playSuccess() {
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+                    gain.gain.setValueAtTime(0.1, now + idx * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.3);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + idx * 0.08);
+                    osc.stop(now + idx * 0.08 + 0.3);
+                });
+            }
+        }
+        const sfx = new SoundFX();
+    </script>
+
+    <div class="absolute -top-32 -left-32 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+    <!-- HEADER BAR -->
+    <header class="w-full px-6 py-4 glass-panel border-b border-white/10 flex flex-wrap justify-between items-center z-20 gap-4">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center font-bold text-xl shadow-lg shadow-indigo-500/30">
+                👔
+            </div>
+            <div>
+                <h1 class="text-xl md:text-2xl font-extrabold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-200 to-indigo-400">
+                    ЭФФЕКТИВНЫЙ РУКОВОДИТЕЛЬ
+                </h1>
+                <p class="text-xs text-indigo-300/80">Интерактивный командный психологический тренинг</p>
+            </div>
+        </div>
+
+        <!-- Dynamic Header Status / Timer Widget -->
+        <div id="header-timer-box" class="hidden flex items-center space-x-4 glass-panel px-4 py-2 rounded-2xl">
+            <div class="text-right">
+                <div class="text-xs text-indigo-200 uppercase tracking-widest font-semibold" id="timer-label">Время этапа</div>
+                <div class="text-lg font-mono font-bold text-white" id="timer-display">02:00</div>
+            </div>
+            <div class="relative w-12 h-12 flex items-center justify-center">
+                <svg class="w-12 h-12 transform -rotate-90">
+                    <circle cx="24" cy="24" r="20" stroke="rgba(255,255,255,0.1)" stroke-width="4" fill="transparent" />
+                    <circle id="timer-circle-progress" cx="24" cy="24" r="20" stroke="#818cf8" stroke-width="4" stroke-dasharray="125.6" stroke-dashoffset="0" stroke-linecap="round" fill="transparent" class="timer-circle" />
+                </svg>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-grow container mx-auto px-4 py-6 flex flex-col justify-center items-center relative z-10">
+
+        <div id="stage-1" class="w-full max-w-7xl hidden flex-col items-center">
+            
+            <div class="text-center mb-6 max-w-2xl">
+                <span class="px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                    Этап 1 из 2
+                </span>
+                <h2 class="text-2xl md:text-3xl font-bold mt-2">Соберите образ лидера</h2>
+                <p class="text-slate-300 text-sm mt-1">
+                    Перетащите <strong class="text-indigo-400">ровно 5 ключевых качеств</strong> на силуэт руководителя или кликните по ним.
+                </p>
+                <div class="mt-2 text-xs font-semibold tracking-wide text-indigo-300/80" id="counter-badge">
+                    Выбрано: <span id="selected-count" class="text-teal-400 text-base font-bold">0</span> из 5
+                </div>
+            </div>
+
+            <!-- Workspace: Cards Grid + Center Silhouette -->
+            <div class="w-full grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                
+                <!-- Left Qualities Column -->
+                <div class="lg:col-span-3 grid grid-cols-2 lg:grid-cols-1 gap-3 order-2 lg:order-1" id="cards-left">
+                    <!-- Dynamic JS Inject -->
+                </div>
+
+                <!-- Center Silhouette Target Zone -->
+                <div class="lg:col-span-6 flex flex-col items-center justify-center relative min-h-[420px] order-1 lg:order-2">
+                    <div id="silhouette-container" class="relative w-full max-w-sm h-[440px] flex items-center justify-center rounded-3xl glass-panel p-4 transition-all duration-300">
+                        
+                        <!-- Glowing Background Aura -->
+                        <div class="absolute inset-0 rounded-3xl bg-gradient-to-b from-indigo-500/10 to-purple-500/10 blur-xl"></div>
+
+                        <!-- SVG Silhouette of Leader -->
+                        <svg id="leader-svg" class="w-full h-full max-h-[380px] animate-pulse-glow transition-all duration-300" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path opacity="0.15" d="M12 2C8.68629 2 6 4.68629 6 8C6 10.2208 7.2065 12.1599 9 13.1934V15C9 15.5523 8.55228 16 8 16H5C3.34315 16 2 17.3431 2 19V21C2 21.5523 2.44772 22 3 22H21C21.5523 22 22 21.5523 22 21V19C22 17.3431 20.6569 16 19 16H16C15.4477 16 15 15.5523 15 15V13.1934C16.7935 12.1599 18 10.2208 18 8C18 4.68629 15.3137 2 12 2Z" fill="url(#grad1)"/>
+                            <path d="M12 4C9.79086 4 8 5.79086 8 8C8 10.2091 9.79086 12 12 12C14.2091 12 16 10.2091 16 8C16 5.79086 14.2091 4 12 4ZM10 14C8.34315 14 7 15.3431 7 17V20H17V17C17 15.3431 15.6569 14 14 14H10Z" stroke="url(#grad2)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M12 12V16M10 14H14" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round"/>
+                            <defs>
+                                <linearGradient id="grad1" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                                    <stop stop-color="#818cf8"/>
+                                    <stop offset="1" stop-color="#c084fc"/>
+                                </linearGradient>
+                                <linearGradient id="grad2" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                                    <stop stop-color="#6366f1"/>
+                                    <stop offset="1" stop-color="#a855f7"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+
+                        <!-- Attached Cards Overlay Container inside Silhouette -->
+                        <div id="attached-qualities" class="absolute inset-0 p-6 flex flex-col justify-center items-center space-y-2 pointer-events-none">
+                            <!-- Selected cards will visually mount here -->
+                        </div>
+
+                        <!-- Drop Zone Helper Hint -->
+                        <div id="drop-hint" class="absolute bottom-4 text-center pointer-events-none text-xs text-indigo-300/60 bg-black/30 px-3 py-1 rounded-full backdrop-blur-sm">
+                            Перетащите сюда качества
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Qualities Column -->
+                <div class="lg:col-span-3 grid grid-cols-2 lg:grid-cols-1 gap-3 order-3" id="cards-right">
+                    <!-- Dynamic JS Inject -->
+                </div>
+
+            </div>
+
+            <!-- Complete Selection Button -->
+            <div class="mt-8">
+                <button id="btn-finish-stage1" onclick="finishStage1()" disabled class="px-8 py-3.5 rounded-2xl font-bold text-white bg-gradient-to-r from-indigo-600 to-purple-600 disabled:opacity-40 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-indigo-500/40 active:scale-95 transition-all duration-200 text-sm md:text-base tracking-wide flex items-center space-x-2">
+                    <span>ЗАВЕРШИТЬ ВЫБОР</span>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <div id="stage-2" class="w-full max-w-4xl hidden flex-col items-center">
+            
+            <div class="text-center mb-6">
+                <span class="px-3 py-1 rounded-full text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                    Этап 2 из 2: Управленческий кейс
+                </span>
+                <h2 class="text-2xl md:text-4xl font-extrabold mt-2 bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-100 to-purple-200">
+                    Решение управленческой ситуации
+                </h2>
+            </div>
+
+            <!-- Selected Qualities Bar -->
+            <div class="w-full glass-panel rounded-2xl p-4 mb-6 border border-indigo-500/30">
+                <div class="text-xs text-indigo-300 uppercase tracking-widest font-semibold mb-2 text-center">
+                    Выбранный портрет руководителя:
+                </div>
+                <div id="selected-qualities-bar" class="flex flex-wrap justify-center gap-2">
+                    <!-- Selected 5 qualities inserted here -->
+                </div>
+            </div>
+
+            <!-- Case Scenario Card -->
+            <div id="case-card" class="w-full glass-panel rounded-3xl p-6 md:p-8 mb-6 border-l-4 border-l-indigo-500 relative overflow-hidden shadow-2xl">
+                <div class="flex items-center space-x-3 mb-4">
+                    <span id="case-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/20 text-indigo-300">
+                        Ситуация
+                    </span>
+                    <h3 id="case-title" class="text-xl md:text-2xl font-bold text-white">---</h3>
+                </div>
+                
+                <p id="case-description" class="text-slate-200 text-base md:text-lg leading-relaxed mb-6 font-light">
+                    Загрузка ситуации...
+                </p>
+
+                <div class="bg-indigo-950/40 border border-indigo-500/20 rounded-2xl p-4 md:p-5 flex items-start space-x-3">
+                    <div class="text-2xl">💡</div>
+                    <div>
+                        <h4 class="text-sm font-bold text-indigo-200 uppercase tracking-wide">Инструкция для команды:</h4>
+                        <p class="text-sm text-slate-300 mt-1">
+                            Обсудите ситуацию в команде. Объясните, как именно <strong>выбранные 5 качеств</strong> помогут руководителю наиболее эффективно разрешить возникшую проблему.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Finish Discussion Button -->
+            <button onclick="finishStage2()" class="px-8 py-3.5 rounded-2xl font-bold text-white bg-gradient-to-r from-teal-500 to-indigo-600 hover:shadow-lg hover:shadow-teal-500/30 active:scale-95 transition-all duration-200 text-sm md:text-base tracking-wide flex items-center space-x-2">
+                <span>ЗАВЕРШИТЬ ОБСУЖДЕНИЕ</span>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            </button>
+        </div>
+
+        <div id="stage-final" class="w-full max-w-3xl hidden flex-col items-center text-center">
+            
+            <div class="w-20 h-20 rounded-3xl bg-gradient-to-tr from-teal-400 to-indigo-500 flex items-center justify-center text-4xl shadow-2xl shadow-indigo-500/50 mb-6 animate-float">
+                🏆
+            </div>
+
+            <h2 class="text-3xl md:text-5xl font-extrabold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-200 to-teal-200">
+                Тренинг завершён!
+            </h2>
+            <p class="text-slate-300 text-lg mb-8">Отличная командная работа!</p>
+
+            <div class="w-full glass-panel rounded-3xl p-6 md:p-8 text-left mb-8 space-y-6">
+                <div>
+                    <h4 class="text-xs uppercase tracking-widest text-indigo-300 font-semibold mb-3">
+                        Ваша управленческая модель
+                    </h4>
+                    <div id="final-qualities-list" class="flex flex-wrap gap-2">
+                        <!-- Final 5 qualities -->
+                    </div>
+                </div>
+
+                <div class="border-t border-white/10 pt-4">
+                    <h4 class="text-xs uppercase tracking-widest text-indigo-300 font-semibold mb-2">
+                        Разработанный кейс
+                    </h4>
+                    <p id="final-case-title" class="font-bold text-lg text-white mb-1">---</p>
+                    <p id="final-case-text" class="text-sm text-slate-300 italic">---</p>
+                </div>
+
+                <div class="bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/30 rounded-2xl p-5">
+                    <h4 class="text-indigo-200 font-bold mb-2 flex items-center space-x-2">
+                        <span>❓</span>
+                        <span>Вопрос для итоговой рефлексии:</span>
+                    </h4>
+                    <p class="text-base font-medium text-white">
+                        «Как проявились выбранные качества в конкретных действиях руководителя при решении кейса?»
+                    </p>
+                </div>
+            </div>
+
+            <button onclick="restartGame()" class="px-8 py-3.5 rounded-2xl font-bold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:shadow-lg hover:shadow-indigo-500/40 active:scale-95 transition-all duration-200 text-sm md:text-base">
+                ПРОЙТИ ТРЕНИНГ СНОВА
+            </button>
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="w-full text-center py-4 text-xs text-slate-500 relative z-10 border-t border-white/5">
+        Интерактивный тренинг командного взаимодействия • Психология управления
+    </footer>
+
+    <div id="modal-welcome" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
+        <div class="glass-panel max-w-lg w-full rounded-3xl p-6 md:p-8 border border-white/20 shadow-2xl relative animate-float">
+            <div class="w-12 h-12 rounded-2xl bg-indigo-500/20 text-indigo-300 flex items-center justify-center text-2xl mb-4 border border-indigo-500/30">
+                🎯
+            </div>
+            
+            <h3 class="text-2xl font-extrabold text-white mb-2">Инструкция к тренингу</h3>
+            
+            <p class="text-slate-300 text-sm leading-relaxed mb-6">
+                Перед вами 12 ключевых качеств руководителя. В вашей команде нет заранее "правильных" ответов.<br><br>
+                1️⃣ За <strong>2 минуты</strong> выберите <strong class="text-indigo-300">ровно 5 качеств</strong>, перетащив карточки на силуэт руководителя (или кликнув по ним).<br>
+                2️⃣ После этого вы получите случайную управленческую situation/кейс для командного обсуждения на <strong>3 минуты</strong>.
+            </p>
+
+            <button onclick="startGame()" class="w-full py-4 rounded-2xl font-bold text-white bg-gradient-to-r from-indigo-500 via-indigo-600 to-purple-600 hover:shadow-xl hover:shadow-indigo-500/40 active:scale-95 transition-all duration-200 tracking-wider">
+                НАЧАТЬ ТРЕНИНГ
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Data Definitions
+        const QUALITIES = [
+            { id: 1, name: "Ответственность", icon: "🛡️" },
+            { id: 2, name: "Самоконтроль", icon: "🧠" },
+            { id: 3, name: "Уверенность", icon: "⚡" },
+            { id: 4, name: "Принятие решений", icon: "🎯" },
+            { id: 5, name: "Гибкость", icon: "🌊" },
+            { id: 6, name: "Эмпатия", icon: "❤️" },
+            { id: 7, name: "Коммуникация", icon: "💬" },
+            { id: 8, name: "Справедливость", icon: "⚖️" },
+            { id: 9, name: "Инициативность", icon: "🚀" },
+            { id: 10, name: "Настойчивость", icon: "⛰️" },
+            { id: 11, name: "Умение мотивировать", icon: "🔥" },
+            { id: 12, name: "Умение слушать", icon: "👂" }
+        ];
+
+        const CASES = [
+            {
+                id: 1,
+                badge: "Ситуация 1",
+                title: "Конфликт в коллективе",
+                desc: "Два ключевых сотрудника вашей команды вступили в затяжной конфликт. Они перестали нормально взаимодействовать, созваниваться и передавать информацию. Из-за этого срываются сроки общего проекта, а атмосфера в отделе стала напряженной. Каждый из них считает себя правым и винит другого."
+            },
+            {
+                id: 2,
+                badge: "Ситуация 2",
+                title: "Сложное решение и дедлайн",
+                desc: "Завтра утром команда должна сдать важнейший проект клиенту. Вечером выясняется, что ведущий специалист неожиданно заболел, а оставшаяся часть работы требует высокой квалификации. Команда деморализована, времени крайне мало, риск провала велик."
+            },
+            {
+                id: 3,
+                badge: "Ситуация 3",
+                title: "Снижение мотивации",
+                desc: "В последние недели вы замечаете, что сотрудники работают 'для галочки', инициатива сошла на нет, задачи выполняются формально. В разговорах звучат мысли, что их усилия и сверхурочная работа всё равно никто не замечает и не ценит."
+            }
+        ];
+
+        // App State
+        let selectedQualities = [];
+        let timerInterval = null;
+        let remainingSeconds = 120;
+        let totalStageSeconds = 120;
+        let currentStage = 1;
+        let selectedCase = null;
+
+        // Initialize UI Elements
+        document.addEventListener("DOMContentLoaded", () => {
+            renderQualities();
+            setupPointerEvents();
+        });
+
+        function startGame() {
+            sfx.init();
+            sfx.playPop();
+            document.getElementById('modal-welcome').classList.add('hidden');
+            document.getElementById('stage-1').classList.remove('hidden');
+            document.getElementById('stage-1').classList.add('flex');
+            document.getElementById('header-timer-box').classList.remove('hidden');
+            
+            startTimer(120, "Этап 1: Выбор", () => {
+                finishStage1();
+            });
+        }
+
+        function renderQualities() {
+            const leftCol = document.getElementById('cards-left');
+            const rightCol = document.getElementById('cards-right');
+            leftCol.innerHTML = '';
+            rightCol.innerHTML = '';
+
+            QUALITIES.forEach((q, index) => {
+                const card = document.createElement('div');
+                card.className = `glass-card p-3 md:p-4 rounded-2xl cursor-grab flex items-center space-x-3 text-sm md:text-base font-medium select-none transform transition-all duration-200 border border-white/10`;
+                card.dataset.id = q.id;
+                card.id = `card-${q.id}`;
+                card.innerHTML = `
+                    <span class="text-xl md:text-2xl pointer-events-none">${q.icon}</span>
+                    <span class="text-white text-xs md:text-sm font-semibold pointer-events-none">${q.name}</span>
+                `;
+
+                // Quick click handler for mobile or easy tap
+                card.addEventListener('click', (e) => {
+                    if (!card.classList.contains('dragging-active')) {
+                        toggleQualitySelection(q.id);
+                    }
+                });
+
+                if (index % 2 === 0) {
+                    leftCol.appendChild(card);
+                } else {
+                    rightCol.appendChild(card);
+                }
+            });
+        }
+
+        // Toggle Selection Logic
+        function toggleQualitySelection(id) {
+            const quality = QUALITIES.find(q => q.id === id);
+            const idx = selectedQualities.findIndex(q => q.id === id);
+
+            if (idx > -1) {
+                // Deselect
+                selectedQualities.splice(idx, 1);
+                sfx.playPop();
+            } else {
+                // Select
+                if (selectedQualities.length >= 5) {
+                    // Flash max indicator
+                    const badge = document.getElementById('counter-badge');
+                    badge.classList.add('text-red-400', 'scale-110');
+                    setTimeout(() => badge.classList.remove('text-red-400', 'scale-110'), 300);
+                    return;
+                }
+                selectedQualities.push(quality);
+                sfx.playPop();
+            }
+
+            updateUI();
+        }
+
+        // Update UI state based on selectedQualities
+        function updateUI() {
+            // Update counter
+            document.getElementById('selected-count').innerText = selectedQualities.length;
+            
+            // Enable / Disable finish button
+            const btn = document.getElementById('btn-finish-stage1');
+            btn.disabled = selectedQualities.length !== 5;
+
+            // Highlight Cards in Grid
+            QUALITIES.forEach(q => {
+                const card = document.getElementById(`card-${q.id}`);
+                const isSelected = selectedQualities.some(sq => sq.id === q.id);
+                if (isSelected) {
+                    card.classList.add('opacity-40', 'scale-95', 'border-indigo-500');
+                } else {
+                    card.classList.remove('opacity-40', 'scale-95', 'border-indigo-500');
+                }
+            });
+
+            // Update Silhouette Container Overlay
+            const overlay = document.getElementById('attached-qualities');
+            const dropHint = document.getElementById('drop-hint');
+            overlay.innerHTML = '';
+
+            if (selectedQualities.length > 0) {
+                dropHint.classList.add('hidden');
+            } else {
+                dropHint.classList.remove('hidden');
+            }
+
+            selectedQualities.forEach(q => {
+                const tag = document.createElement('div');
+                tag.className = 'glass-panel bg-indigo-600/50 px-3 py-1.5 rounded-xl text-xs md:text-sm font-bold text-white flex items-center space-x-2 border border-indigo-400/40 animate-float shadow-lg pointer-events-auto cursor-pointer';
+                tag.innerHTML = `<span>${q.icon}</span> <span>${q.name}</span> <span class="text-indigo-200 text-xs hover:text-white">✕</span>`;
+                tag.onclick = (e) => {
+                    e.stopPropagation();
+                    toggleQualitySelection(q.id);
+                };
+                overlay.appendChild(tag);
+            });
+        }
+
+        function setupPointerEvents() {
+            const targetArea = document.getElementById('silhouette-container');
+            let activeCard = null;
+            let cloneCard = null;
+            let startX = 0, startY = 0;
+
+            document.addEventListener('pointerdown', (e) => {
+                const card = e.target.closest('.glass-card');
+                if (!card || card.classList.contains('opacity-40')) return;
+
+                activeCard = card;
+                const rect = card.getBoundingClientRect();
+                startX = e.clientX - rect.left;
+                startY = e.clientY - rect.top;
+
+                // Create dragging clone
+                cloneCard = card.cloneNode(true);
+                cloneCard.classList.add('dragging', 'fixed', 'pointer-events-none');
+                cloneCard.style.width = `${rect.width}px`;
+                cloneCard.style.left = `${rect.left}px`;
+                cloneCard.style.top = `${rect.top}px`;
+                document.body.appendChild(cloneCard);
+
+                card.classList.add('opacity-30', 'dragging-active');
+            });
+
+            document.addEventListener('pointermove', (e) => {
+                if (!cloneCard) return;
+                e.preventDefault();
+
+                const x = e.clientX - startX;
+                const y = e.clientY - startY;
+                cloneCard.style.left = `${x}px`;
+                cloneCard.style.top = `${y}px`;
+
+                // Check collision with drop zone
+                const dropRect = targetArea.getBoundingClientRect();
+                if (
+                    e.clientX >= dropRect.left &&
+                    e.clientX <= dropRect.right &&
+                    e.clientY >= dropRect.top &&
+                    e.clientY <= dropRect.bottom
+                ) {
+                    targetArea.classList.add('drop-zone-active');
+                } else {
+                    targetArea.classList.remove('drop-zone-active');
+                }
+            });
+
+            document.addEventListener('pointerup', (e) => {
+                if (!cloneCard) return;
+
+                targetArea.classList.remove('drop-zone-active');
+                const dropRect = targetArea.getBoundingClientRect();
+
+                // Drop condition
+                if (
+                    e.clientX >= dropRect.left &&
+                    e.clientX <= dropRect.right &&
+                    e.clientY >= dropRect.top &&
+                    e.clientY <= dropRect.bottom
+                ) {
+                    const id = parseInt(activeCard.dataset.id);
+                    if (!selectedQualities.some(q => q.id === id)) {
+                        toggleQualitySelection(id);
+                    }
+                }
+
+                if (activeCard) {
+                    activeCard.classList.remove('opacity-30', 'dragging-active');
+                }
+                if (cloneCard) {
+                    cloneCard.remove();
+                    cloneCard = null;
+                }
+                activeCard = null;
+            });
+        }
+
+        function startTimer(seconds, label, onComplete) {
+            clearInterval(timerInterval);
+            remainingSeconds = seconds;
+            totalStageSeconds = seconds;
+            
+            document.getElementById('timer-label').innerText = label;
+            updateTimerDisplay();
+
+            timerInterval = setInterval(() => {
+                remainingSeconds--;
+                updateTimerDisplay();
+
+                if (remainingSeconds <= 0) {
+                    clearInterval(timerInterval);
+                    if (onComplete) onComplete();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(remainingSeconds / 60);
+            const secs = remainingSeconds % 60;
+            document.getElementById('timer-display').innerText = 
+                `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+            // Circular progress ring
+            const circle = document.getElementById('timer-circle-progress');
+            const circumference = 2 * Math.PI * 20; // r=20
+            const offset = circumference - (remainingSeconds / totalStageSeconds) * circumference;
+            circle.style.strokeDasharray = `${circumference}`;
+            circle.style.strokeDashoffset = `${offset}`;
+
+            if (remainingSeconds <= 10) {
+                circle.style.stroke = '#ef4444'; // Red alert
+            } else {
+                circle.style.stroke = '#818cf8';
+            }
+        }
+
+        function finishStage1() {
+            if (selectedQualities.length < 5) {
+                // Auto fill if time ran out
+                QUALITIES.forEach(q => {
+                    if (selectedQualities.length < 5 && !selectedQualities.some(sq => sq.id === q.id)) {
+                        selectedQualities.push(q);
+                    }
+                });
+            }
+
+            clearInterval(timerInterval);
+            sfx.playSuccess();
+
+            // Hide Stage 1, Show Stage 2
+            document.getElementById('stage-1').classList.add('hidden');
+            document.getElementById('stage-1').classList.remove('flex');
+            
+            document.getElementById('stage-2').classList.remove('hidden');
+            document.getElementById('stage-2').classList.add('flex');
+
+            // Render Selected Qualities Bar
+            const qBar = document.getElementById('selected-qualities-bar');
+            qBar.innerHTML = '';
+            selectedQualities.forEach(q => {
+                const tag = document.createElement('div');
+                tag.className = 'glass-panel bg-indigo-600/40 px-3 py-1.5 rounded-xl text-xs md:text-sm font-semibold text-white flex items-center space-x-2 border border-indigo-400/30';
+                tag.innerHTML = `<span>${q.icon}</span> <span>${q.name}</span>`;
+                qBar.appendChild(tag);
+            });
+
+            // Randomly Pick 1 Case
+            selectedCase = CASES[Math.floor(Math.random() * CASES.length)];
+            document.getElementById('case-badge').innerText = selectedCase.badge;
+            document.getElementById('case-title').innerText = selectedCase.title;
+            document.getElementById('case-description').innerText = selectedCase.desc;
+
+            // Start Stage 2 Timer (180s = 3 minutes)
+            startTimer(180, "Этап 2: Обсуждение", () => {
+                finishStage2();
+            });
+        }
+
+        function finishStage2() {
+            clearInterval(timerInterval);
+            sfx.playSuccess();
+
+            // Trigger Celebration Confetti
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+            }
+
+            document.getElementById('header-timer-box').classList.add('hidden');
+            document.getElementById('stage-2').classList.add('hidden');
+            document.getElementById('stage-2').classList.remove('flex');
+
+            document.getElementById('stage-final').classList.remove('hidden');
+            document.getElementById('stage-final').classList.add('flex');
+
+            // Render Final Qualities
+            const finalBar = document.getElementById('final-qualities-list');
+            finalBar.innerHTML = '';
+            selectedQualities.forEach(q => {
+                const tag = document.createElement('div');
+                tag.className = 'glass-panel bg-teal-500/20 px-3 py-1.5 rounded-xl text-sm font-semibold text-teal-200 border border-teal-500/30 flex items-center space-x-2';
+                tag.innerHTML = `<span>${q.icon}</span> <span>${q.name}</span>`;
+                finalBar.appendChild(tag);
+            });
+
+            document.getElementById('final-case-title').innerText = `${selectedCase.badge}: ${selectedCase.title}`;
+            document.getElementById('final-case-text').innerText = `«${selectedCase.desc}»`;
+        }
+
+        // Restart Game
+        function restartGame() {
+            selectedQualities = [];
+            selectedCase = null;
+            document.getElementById('stage-final').classList.add('hidden');
+            document.getElementById('stage-final').classList.remove('flex');
+            
+            updateUI();
+            document.getElementById('modal-welcome').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
